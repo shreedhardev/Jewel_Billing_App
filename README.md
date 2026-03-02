@@ -1,6 +1,6 @@
-# JewelBill Pro 💎
+# JewelBill 💎
 
-Premium Jewellery GST Invoicing application designed for wholesalers and retailers. Efficiently manage company settings, customer details, and generate professional GST-compliant invoices with automatic tax calculations.
+Jewellery GST Invoicing application designed for wholesalers. Efficiently manage company settings, customer details, and generate professional GST-compliant invoices with automatic tax calculations.Open source project. 
 
 ## 🚀 Live Demo
 **Access the hosted application here:**  
