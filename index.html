@@ -98,17 +98,27 @@
             font-family: 'Outfit', sans-serif;
         }
 
-        .container {
-            max-width: 1200px;
+        .layout {
             width: 100%;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid:
+                "sidebar body" 1fr / 1.3fr 1fr;
             gap: 2rem;
+            align-items: start;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+        }
+
+        .body {
+            grid-area: body;
         }
 
         @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
+            .layout {
+                grid:
+                    "sidebar" auto "body" auto / 1fr;
                 gap: 1.5rem;
             }
         }
@@ -287,6 +297,8 @@
             top: 2rem;
             max-height: calc(100vh - 4rem);
             overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+            padding-left: 2rem;
         }
 
         .invoice-preview {
@@ -302,9 +314,9 @@
             margin: 0 auto;
             transform-origin: top center;
             /* Zoom handling for display */
-            transform: scale(0.65);
-            margin-top: -100px;
-            margin-bottom: -100px;
+            transform: scale(0.6);
+            margin-top: -150px;
+            margin-bottom: -150px;
         }
 
         @media (max-width: 1400px) {
@@ -504,9 +516,9 @@
 </head>
 
 <body>
-    <div class="container">
+    <section class="layout">
         <!-- Input Section -->
-        <div class="editor-pane">
+        <div class="editor-pane sidebar">
             <header class="card">
                 <h2 class="card-title">Company Settings</h2>
                 <div class="form-grid">
@@ -521,11 +533,11 @@
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Address</label>
                         <textarea id="compAddress"
-                            oninput="updatePreview()">123, NSC Bose Road, Sowcarpet, Chennai - 600001</textarea>
+                            oninput="updatePreview()">No 16 Rangasamuthram,sathyamangalam,Erode,Tamilnadu 638-402</textarea>
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" id="compPhone" value="+91 94439 31547" oninput="updatePreview()">
+                        <input type="text" id="compPhone" value="+91 87546 31547" oninput="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Invoice Prefix</label>
@@ -647,7 +659,7 @@
         </div>
 
         <!-- Preview Section -->
-        <div class="preview-pane">
+        <div class="preview-pane body">
             <div id="invoiceOutput" class="invoice-preview">
                 <div class="preview-header">
                     <div class="company-info">
@@ -721,15 +733,15 @@
 
                 <div class="gst-breakdown">
                     <p><strong>Amount in words:</strong> <span id="p_amountWords">...</span></p>
-                    <p style="margin-top: 5px;">HSN 7113: Gold Jewellery 3% GST | Service 5% GST on Making Charges</p>
+                    <p style="margin-top: 5px;">HSN 7113: Gold Jewellery</p>
                 </div>
 
                 <div class="footer-terms">
-                    <p>Terms & Conditions: No returns on custom designs. E & O.E. Subject to Chennai Jurisdiction.</p>
+                    <p>TSubject to Sathyamangalam Jurisdiction.</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <script>
         let items = [];
