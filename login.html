@@ -150,7 +150,7 @@
         </form>
 
         <div class="demo-hint">
-            Login with: <code>nikkil</code> / <code>nikkil123</code>
+            Login is hardcoded for demo. Just click <b>Sign In</b>.
         </div>
     </div>
 
@@ -159,17 +159,17 @@
 
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
 
-            const credentials = {
-                "nikkil": "nikkil123",
-                "admin": "admin123"
-            };
+            // Hardcoded Credentials
+            const user = 'admin';
+            const pass = 'admin123';
 
-            if (credentials[user] === pass) {
+            // Automatic validation based on hardcoded values
+            if (user === 'admin' && pass === 'admin123') {
                 generateJWT(user);
             } else {
+                // This branch shouldn't really be reached with hardcoded values, 
+                // but kept for structure.
                 document.getElementById('errorMsg').style.display = 'block';
             }
         });
