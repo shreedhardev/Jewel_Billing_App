@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | JewelBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@700&display=swap"
+        rel="stylesheet">
+    <!-- JWT Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.24/jsrsasign-all-min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d23;
+            --input-bg: #252a33;
+            --border-color: #333b47;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-gold: #fbbf24;
+            --accent-blue: #3b82f6;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card h2 {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+        }
+
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .demo-hint {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <div class="logo">JewelBill Pro</div>
+        <h2>Wholesaler Login</h2>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" value="admin" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" value="admin123" required>
+            </div>
+            <button type="submit" class="btn-login">Sign In</button>
+            <div id="errorMsg" class="error-msg">Invalid credentials. Please try again.</div>
+        </form>
+
+        <div class="demo-hint">
+            Login with: <code>nikkil</code> / <code>nikkil123</code>
+        </div>
+    </div>
+
+    <script>
+        const SECRET = "jewel-bill-pro-2024-secret-key";
+
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            const credentials = {
+                "nikkil": "nikkil123",
+                "admin": "admin123"
+            };
+
+            if (credentials[user] === pass) {
+                generateJWT(user);
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        });
+
+        function generateJWT(username) {
+            try {
+                // Header (standard HS256)
+                const header = { alg: "HS256", typ: "JWT" };
+                // Payload (expires in 1 hour)
+                const payload = {
+                    sub: username,
+                    iat: KJUR.jws.IntDate.get("now"),
+                    exp: KJUR.jws.IntDate.get("now + 1hour"),
+                    role: "wholesaler"
+                };
+
+                const sHeader = JSON.stringify(header);
+                const sPayload = JSON.stringify(payload);
+
+                // Sign JWT
+                const token = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, { utf8: SECRET });
+
+                // Save to localStorage
+                localStorage.setItem('jewel_auth_token', token);
+
+                // Redirect
+                window.location.href = 'index.html';
+            } catch (err) {
+                console.error("JWT Error:", err);
+                alert("Login Error. Check console.");
+            }
+        }
+
+        // Clear any old error on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                document.getElementById('errorMsg').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+
+</html>
