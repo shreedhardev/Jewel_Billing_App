@@ -490,10 +490,11 @@
                     <table id="itemsTable">
                         <thead>
                             <tr>
-                                <th style="width: 30%;">Item</th>
-                                <th style="width: 15%;">Wt (g)</th>
-                                <th style="width: 15%;">Rate/g</th>
-                                <th style="width: 15%;">Making/g</th>
+                                <th style="width: 25%;">Item</th>
+                                <th style="width: 12%;">Total Wt(g)</th>
+                                <th style="width: 12%;">Stone(g)</th>
+                                <th style="width: 12%;">Rate/g</th>
+                                <th style="width: 12%;">Making/g</th>
                                 <th style="width: 15%;">Total</th>
                                 <th style="width: 5%;"></th>
                             </tr>
@@ -515,7 +516,7 @@
                     </div>
                     <div class="form-group">
                         <label>Making GST %</label>
-                        <input type="number" id="makingGstRate" value="5" step="0.1" oninput="calculate()">
+                        <input type="number" id="makingGstRate" value="3" step="0.1" oninput="calculate()">
                     </div>
                     <div class="form-group">
                         <label>Discount (%)</label>
@@ -597,7 +598,9 @@
                         <tr>
                             <th>Description</th>
                             <th style="text-align: center;">HSN</th>
-                            <th style="text-align: right;">Weight</th>
+                            <th style="text-align: right;">Gross Wt</th>
+                            <th style="text-align: right;">Stone</th>
+                            <th style="text-align: right;">Net Wt</th>
                             <th style="text-align: right;">Rate/g</th>
                             <th style="text-align: right;">Making</th>
                             <th style="text-align: right;">Total</th>
@@ -660,6 +663,7 @@
                 name: 'Gold Ornament',
                 hsn: '7113',
                 weight: 0,
+                stoneWeight: 0,
                 rate: 0,
                 making: 0,
                 qty: 1
@@ -688,6 +692,7 @@
                 tr.innerHTML = `
                     <td><input type="text" class="item-input" value="${item.name}" oninput="updateItem(${item.id}, 'name', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.weight}" oninput="updateItem(${item.id}, 'weight', this.value)"></td>
+                    <td><input type="number" class="item-input" value="${item.stoneWeight || 0}" oninput="updateItem(${item.id}, 'stoneWeight', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.rate}" oninput="updateItem(${item.id}, 'rate', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.making}" oninput="updateItem(${item.id}, 'making', this.value)"></td>
                     <td id="row_total_${item.id}">₹0</td>
@@ -711,7 +716,9 @@
             pItemsBody.innerHTML = '';
 
             items.forEach(item => {
-                const goldVal = item.weight * item.rate;
+                const stoneWeight = item.stoneWeight || 0;
+                const netWeight = Math.max(0, item.weight - stoneWeight);
+                const goldVal = netWeight * item.rate;
                 const makingVal = item.weight * item.making;
                 const rowTotal = goldVal + makingVal;
 
@@ -731,6 +738,8 @@
                     <td>${item.name}</td>
                     <td style="text-align: center;">${item.hsn}</td>
                     <td style="text-align: right;">${item.weight}g</td>
+                    <td style="text-align: right;">${stoneWeight}g</td>
+                    <td style="text-align: right;">${netWeight.toFixed(3)}g</td>
                     <td style="text-align: right;">₹${item.rate.toLocaleString()}</td>
                     <td style="text-align: right;">₹${item.making}</td>
                     <td style="text-align: right;">₹${rowTotal.toLocaleString()}</td>
