@@ -458,6 +458,7 @@
                                 <th>HSN</th>
                                 <th>Qty (Gms)</th>
                                 <th>Rate</th>
+                                <th>Total</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -645,6 +646,12 @@
         function updateItem(id, field, value) {
             const item = items.find(i => i.id === id);
             item[field] = field === 'name' || field === 'hsn' ? value : parseFloat(value) || 0;
+
+            // Update row total immediately
+            const total = (item.qty * item.rate).toFixed(2);
+            const totalEl = document.getElementById(`row_total_${id}`);
+            if (totalEl) totalEl.innerText = '₹' + total;
+
             updatePreview();
         }
 
@@ -658,12 +665,14 @@
             const tbody = document.getElementById('itemsBody');
             tbody.innerHTML = '';
             items.forEach(item => {
+                const total = (item.qty * item.rate).toFixed(2);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><input type="text" class="item-input" value="${item.name}" oninput="updateItem(${item.id}, 'name', this.value)"></td>
                     <td><input type="text" class="item-input" value="${item.hsn}" oninput="updateItem(${item.id}, 'hsn', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.qty}" oninput="updateItem(${item.id}, 'qty', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.rate}" oninput="updateItem(${item.id}, 'rate', this.value)"></td>
+                    <td id="row_total_${item.id}">₹${total}</td>
                     <td><button class="btn btn-danger" onclick="removeItem(${item.id})">×</button></td>
                 `;
                 tbody.appendChild(tr);
