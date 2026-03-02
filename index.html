@@ -461,12 +461,47 @@
         }
 
         .footer-terms {
-            margin-top: 50px;
+            margin-top: 20px;
             font-size: 0.75rem;
             color: #a0aec0;
             border-top: 1px solid #edf2f7;
             padding-top: 10px;
             text-align: center;
+        }
+
+        .signatory-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 1px solid #edf2f7;
+            padding-top: 20px;
+        }
+
+        .declaration {
+            font-size: 0.7rem;
+            color: #718096;
+            max-width: 60%;
+            text-align: left;
+        }
+
+        .signatory-box {
+            text-align: right;
+            min-width: 200px;
+        }
+
+        .signatory-box p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .signatory-box span {
+            display: block;
+            font-weight: 700;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-size: 0.85rem;
         }
 
         /* Print Override */
@@ -545,6 +580,15 @@
                     </div>
                 </div>
                 <div class="actions" style="flex-direction: column; gap: 0.5rem; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center;"
+                        onclick="window.location.href='dashboard.html'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Dashboard
+                    </button>
                     <button class="btn btn-gold" style="width: 100%; justify-content: center;" onclick="showHistory()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
@@ -731,13 +775,22 @@
                     </div>
                 </div>
 
-                <div class="gst-breakdown">
-                    <p><strong>Amount in words:</strong> <span id="p_amountWords">...</span></p>
-                    <p style="margin-top: 5px;">HSN 7113: Gold Jewellery</p>
+                <div class="signatory-section">
+                    <div class="declaration">
+                        <p><strong>Declaration:</strong></p>
+                        <p>We declare that this invoice shows the actual price of the goods described and that all
+                            particulars are true and correct.</p>
+                    </div>
+                    <div class="signatory-box">
+                        <p>for <span id="p_compName_sign" style="border:none; display:inline; font-weight:bold;">SRI DEV
+                                JEWELLS MAKERS</span></p>
+                        <span>Authorised Signatory</span>
+                    </div>
                 </div>
 
                 <div class="footer-terms">
-                    <p>TSubject to Sathyamangalam Jurisdiction.</p>
+                    <p>Subject to Sathyamangalam Jurisdiction.</p>
+                    <p style="font-size: 0.6rem; margin-top: 5px;">This is a Computer Generated Invoice</p>
                 </div>
             </div>
         </div>
@@ -879,6 +932,7 @@
 
         function updateHeaderPreview() {
             document.getElementById('p_compName').innerText = document.getElementById('compName').value;
+            document.getElementById('p_compName_sign').innerText = document.getElementById('compName').value;
             document.getElementById('p_compAddress').innerText = document.getElementById('compAddress').value;
             document.getElementById('p_compGst').innerText = document.getElementById('compGst').value;
             document.getElementById('p_compPhone').innerText = document.getElementById('compPhone').value;

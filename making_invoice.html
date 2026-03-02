@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Making Invoice | JewelBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.24/jsrsasign-all-min.js"></script>
+    <script>
+        // AUTH GUARD
+        (function () {
+            const SECRET = "jewel-bill-pro-2024-secret-key";
+            const token = localStorage.getItem('jewel_auth_token');
+
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const isValid = KJUR.jws.JWS.verify(token, { utf8: SECRET }, ["HS256"]);
+                if (!isValid) throw new Error("Invalid Token");
+
+                const payload = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(token.split(".")[1]));
+                if (payload.exp < KJUR.jws.IntDate.get("now")) {
+                    throw new Error("Token Expired");
+                }
+            } catch (err) {
+                localStorage.removeItem('jewel_auth_token');
+                window.location.href = 'login.html';
+            }
+        })();
+
+        function logout() {
+            localStorage.removeItem('jewel_auth_token');
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d23;
+            --input-bg: #252a33;
+            --border-color: #333b47;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-gold: #fbbf24;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --white: #ffffff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
+        }
+
+        h1,
+        h2,
+        h3,
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .layout {
+            width: 100%;
+            display: grid;
+            grid: "sidebar body" 1fr / 1.3fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+        }
+
+        .body {
+            grid-area: body;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid: "sidebar" auto "body" auto / 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        .editor-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-gold);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group[style*="grid-column: span 2"] {
+                grid-column: span 1 !important;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.75rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .item-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 4px;
+        }
+
+        .item-input:focus {
+            outline: none;
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-hover));
+            color: white;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #000;
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 0.4rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Preview Pane Styles - Tally Style */
+        .preview-pane {
+            position: sticky;
+            top: 2rem;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+
+        .invoice-preview {
+            background-color: var(--white);
+            color: #000;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 2mm;
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            transform-origin: top center;
+            transform: scale(0.6);
+            margin-top: -150px;
+            margin-bottom: -150px;
+            border: 1px solid #000;
+        }
+
+        @media (max-width: 1400px) {
+            .invoice-preview {
+                transform: scale(0.5);
+                margin-top: -200px;
+                margin-bottom: -200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .invoice-preview {
+                transform: scale(0.4);
+                margin-top: -300px;
+                margin-bottom: -300px;
+            }
+
+            .preview-pane {
+                position: relative;
+                top: 0;
+                max-height: none;
+                margin-top: 1rem;
+            }
+        }
+
+        .tally-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+        }
+
+        .tally-table td,
+        .tally-table th {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .sidebar,
+            .actions-bar {
+                display: none !important;
+            }
+
+            .layout {
+                display: block;
+            }
+
+            .preview-pane {
+                position: static;
+                max-height: none;
+                overflow: visible;
+            }
+
+            .invoice-preview {
+                transform: scale(1);
+                margin: 0;
+                border: none;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section class="layout">
+        <!-- Input Section -->
+        <div class="editor-pane sidebar">
+            <header class="card">
+                <h2 class="card-title">Job Work Header</h2>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Business Name</label>
+                        <input type="text" id="compName" value="Sri Dev Jewel makers" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>GSTIN</label>
+                        <input type="text" id="compGst" value="33HLRPD3212N1ZR" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>State Name</label>
+                        <input type="text" id="compState" value="Tamil Nadu, Code : 33" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Address</label>
+                        <textarea id="compAddress"
+                            oninput="updatePreview()">No 16 Rangasamuthram, sathyamangalam 638-402</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Invoice No.</label>
+                        <input type="text" id="invNo" value="8 / 26-27" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Dated</label>
+                        <input type="text" id="invDate" value="30 jan 2026" oninput="updatePreview()">
+                    </div>
+                </div>
+            </header>
+
+            <section class="card">
+                <h2 class="card-title">Dispatch Details</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Delivery Note</label>
+                        <input type="text" id="delNote" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Mode/Terms of Payment</label>
+                        <input type="text" id="paymentTerms" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier's Ref</label>
+                        <input type="text" id="suppRef" value="8 / 26-27" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Other Reference(s)</label>
+                        <input type="text" id="otherRef" oninput="updatePreview()">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="card-title">Customer (Buyer)</h2>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Buyer Name</label>
+                        <input type="text" id="custName" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Buyer Address</label>
+                        <textarea id="custAddress" oninput="updatePreview()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Buyer GSTIN/UIN</label>
+                        <input type="text" id="custGst" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Buyer State</label>
+                        <input type="text" id="custState" value="Tamil Nadu, Code : 33" oninput="updatePreview()">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="card-title">Services (Job Work)</h2>
+                <div class="table-container">
+                    <table id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>HSN</th>
+                                <th>Qty (Gms)</th>
+                                <th>Rate</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                    </table>
+                </div>
+                <button class="btn btn-gold" style="margin-top: 1rem;" onclick="addItem()">+ Add Task</button>
+            </section>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Dashboard</button>
+                <button class="btn btn-primary" onclick="printInvoice()">Print/PDF</button>
+                <button class="btn btn-danger" onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-pane body">
+            <div id="invoiceOutput" class="invoice-preview">
+                <div class="text-center font-bold" style="font-size: 14pt; margin-bottom: 2mm;">Tax Invoice</div>
+                <table class="tally-table">
+                    <tr>
+                        <td width="50%" rowspan="3">
+                            <div class="font-bold" id="p_compName">Sri Dev Jewel makers</div>
+                            <div id="p_compAddress">No 16 Rangasamuthram, sathyamangalam 638-402</div>
+                            <div>Contact: 8754631547</div>
+                            <div>GSTIN/UIN: <span id="p_compGst" class="font-bold">33HLRPD3212N1ZR</span></div>
+                            <div>State Name : <span id="p_compState">Tamil Nadu, Code : 33</span></div>
+                        </td>
+                        <td width="25%">
+                            <div style="font-size: 9pt;">Invoice No.</div>
+                            <div class="font-bold" id="p_invNo">8 / 26-27</div>
+                        </td>
+                        <td width="25%">
+                            <div style="font-size: 9pt;">Dated</div>
+                            <div class="font-bold" id="p_invDate">30 jan 2026</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="font-size: 9pt;">Delivery Note</div>
+                            <div id="p_delNote"></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Mode/Terms of Payment</div>
+                            <div id="p_paymentTerms"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="font-size: 9pt;">Supplier's Ref.</div>
+                            <div id="p_suppRef" class="font-bold">8 / 26-27</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Other Reference(s)</div>
+                            <div id="p_otherRef"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">
+                            <div style="font-size: 9pt;">Buyer</div>
+                            <div class="font-bold" id="p_custName">Jai Gulab Dev Jewellers - T Nagar A/c</div>
+                            <div id="p_custAddress">Old No: 14, New No: 24, Coats Road...</div>
+                            <div>GSTIN/UIN : <span id="p_custGst" class="font-bold">33AAMFJ8066H1Z2</span></div>
+                            <div>State Name : <span id="p_custState">Tamil Nadu, Code : 33</span></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Buyer's Order No.</div>
+                            <div id="p_buyOrderNo"></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Dated</div>
+                            <div id="p_buyOrderDate"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="font-size: 9pt;">Despatch Document No.</div>
+                            <div id="p_despatchDocNo"></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Delivery Note Date</div>
+                            <div id="p_delNoteDate"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="font-size: 9pt;">Despatched through</div>
+                            <div id="p_despatchThrough"></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 9pt;">Destination</div>
+                            <div id="p_destination"></div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="tally-table" style="border-top: none;">
+                    <thead>
+                        <tr>
+                            <th width="5%">Sl No.</th>
+                            <th width="45%">Description of Services</th>
+                            <th width="12%">HSN/SAC</th>
+                            <th width="12%">Quantity</th>
+                            <th width="12%">Rate</th>
+                            <th width="14%">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="p_itemsBody">
+                        <!-- Items injected here -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-right font-bold">Total</td>
+                            <td class="text-center font-bold" id="p_totalQty">0.00</td>
+                            <td></td>
+                            <td class="text-right font-bold" id="p_subtotal">₹0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="border: 1px solid #000; border-top: none; padding: 10px;">
+                    <div>Amount Chargeable (in words)</div>
+                    <div class="font-bold" id="p_words">INR Zero Only</div>
+                </div>
+
+                <table class="tally-table" style="border-top: none; font-size: 9pt;">
+                    <thead>
+                        <tr>
+                            <th width="30%" rowspan="2">HSN/SAC</th>
+                            <th width="15%" rowspan="2">Taxable Value</th>
+                            <th width="25%" colspan="2">Central Tax</th>
+                            <th width="25%" colspan="2">State Tax</th>
+                            <th width="15%" rowspan="2">Total Tax Amount</th>
+                        </tr>
+                        <tr>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="p_taxBody">
+                        <!-- Tax breakdown here -->
+                    </tbody>
+                </table>
+
+                <div style="border: 1px solid #000; border-top: none; padding: 10px;">
+                    <div>Tax Amount (in words): <span class="font-bold" id="p_taxWords">Zero</span></div>
+                </div>
+
+                <table class="tally-table" style="border-top: none;">
+                    <tr>
+                        <td width="60%" style="font-size: 8pt;">
+                            <div class="font-bold" style="text-decoration: underline;">Declaration</div>
+                            We declare that this invoice shows the actual price of the goods described and that all
+                            particulars are true and correct.
+                        </td>
+                        <td width="40%" class="text-right">
+                            <div style="font-size: 9pt;">for SRI DEV JEWEL MAKERS</div>
+                            <br><br><br>
+                            <div class="font-bold">Authorised Signatory</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="text-center" style="font-size: 8pt; margin-top: 2mm;">
+                    SUBJECT TO SATHYAMANGALAM JURISDICTION<br>
+                    This is a Computer Generated Invoice
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let items = [
+            { id: 1, name: 'Job Work - GST', hsn: '998892', qty: 605.71, rate: 628.15 }
+        ];
+
+        function addItem() {
+            items.push({ id: Date.now(), name: 'Job Work - GST', hsn: '998892', qty: 0, rate: 0 });
+            renderItems();
+            updatePreview();
+        }
+
+        function updateItem(id, field, value) {
+            const item = items.find(i => i.id === id);
+            item[field] = field === 'name' || field === 'hsn' ? value : parseFloat(value) || 0;
+            updatePreview();
+        }
+
+        function removeItem(id) {
+            items = items.filter(i => i.id !== id);
+            renderItems();
+            updatePreview();
+        }
+
+        function renderItems() {
+            const tbody = document.getElementById('itemsBody');
+            tbody.innerHTML = '';
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" class="item-input" value="${item.name}" oninput="updateItem(${item.id}, 'name', this.value)"></td>
+                    <td><input type="text" class="item-input" value="${item.hsn}" oninput="updateItem(${item.id}, 'hsn', this.value)"></td>
+                    <td><input type="number" class="item-input" value="${item.qty}" oninput="updateItem(${item.id}, 'qty', this.value)"></td>
+                    <td><input type="number" class="item-input" value="${item.rate}" oninput="updateItem(${item.id}, 'rate', this.value)"></td>
+                    <td><button class="btn btn-danger" onclick="removeItem(${item.id})">×</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updatePreview() {
+            // Header Mapping
+            const fields = ['compName', 'compGst', 'compAddress', 'compState', 'invNo', 'invDate', 'delNote',
+                'paymentTerms', 'suppRef', 'otherRef', 'custName', 'custAddress', 'custGst', 'custState'];
+            fields.forEach(f => {
+                const el = document.getElementById('p_' + f);
+                if (el) el.innerText = document.getElementById(f).value;
+            });
+
+            // Items Mapping
+            const pBody = document.getElementById('p_itemsBody');
+            pBody.innerHTML = '';
+            let subtotal = 0;
+            let totalQty = 0;
+
+            items.forEach((item, idx) => {
+                const amount = item.qty * item.rate;
+                subtotal += amount;
+                totalQty += item.qty;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center">${idx + 1}</td>
+                    <td>
+                        <div class="font-bold">${item.name}</div>
+                        <div style="margin-left: 10mm; font-size: 9pt; margin-top: 2mm;">
+                            2.5% Output CGST A/c<br>2.5% Output SGST A/c
+                        </div>
+                    </td>
+                    <td class="text-center">${item.hsn}</td>
+                    <td class="text-center">${item.qty.toFixed(3)}</td>
+                    <td class="text-right">${item.rate.toFixed(2)}</td>
+                    <td class="text-right">${amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                `;
+                pBody.appendChild(tr);
+
+                // Add tax lines under each item (as per Tally style in image)
+                const cgstAmt = amount * 0.025;
+                const sgstAmt = amount * 0.025;
+
+                const taxTr = document.createElement('tr');
+                taxTr.style.border = 'none';
+                taxTr.innerHTML = `
+                    <td style="border:none"></td>
+                    <td style="border:none">
+                        <div style="margin-left: 10mm; font-size: 9pt; display: flex; justify-content: space-between; width: 80%;">
+                           <span></span> <span>2.50 %</span>
+                        </div>
+                        <div style="margin-left: 10mm; font-size: 9pt; display: flex; justify-content: space-between; width: 80%;">
+                           <span></span> <span>2.50 %</span>
+                        </div>
+                    </td>
+                    <td style="border:none"></td><td style="border:none"></td><td style="border:none"></td>
+                    <td class="text-right" style="border:none">
+                        <div style="font-size: 9pt;">${cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                        <div style="font-size: 9pt;">${sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    </td>
+                `;
+                pBody.appendChild(taxTr);
+            });
+
+            const cgstTotal = subtotal * 0.025;
+            const sgstTotal = subtotal * 0.025;
+            const grandTotal = subtotal + cgstTotal + sgstTotal;
+
+            document.getElementById('p_totalQty').innerText = totalQty.toFixed(3);
+            document.getElementById('p_subtotal').innerText = grandTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            document.getElementById('p_words').innerText = "INR " + numberToWords(Math.round(grandTotal)) + " Only";
+
+            // Tax Breakdown Table
+            const tBody = document.getElementById('p_taxBody');
+            tBody.innerHTML = '';
+
+            // Group by HSN (simplified for now)
+            items.forEach(item => {
+                const taxableValue = item.qty * item.rate;
+                const cAmt = taxableValue * 0.025;
+                const sAmt = taxableValue * 0.025;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.hsn}</td>
+                    <td class="text-right">${taxableValue.toLocaleString('en-IN')}</td>
+                    <td class="text-center">2.50%</td>
+                    <td class="text-right">${cAmt.toLocaleString('en-IN')}</td>
+                    <td class="text-center">2.50%</td>
+                    <td class="text-right">${sAmt.toLocaleString('en-IN')}</td>
+                    <td class="text-right">${(cAmt + sAmt).toLocaleString('en-IN')}</td>
+                `;
+                tBody.appendChild(tr);
+            });
+
+            document.getElementById('p_taxWords').innerText = numberToWords(Math.round(cgstTotal + sgstTotal));
+        }
+
+        function numberToWords(number) {
+            const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const scales = ['', 'Thousand', 'Lakh', 'Crore'];
+
+            if (number === 0) return 'Zero';
+
+            let words = '';
+            let scaleIdx = 0;
+
+            function convertChunk(num) {
+                let chunkStr = '';
+                if (num >= 100) {
+                    chunkStr += units[Math.floor(num / 100)] + ' Hundred ';
+                    num %= 100;
+                }
+                if (num >= 20) {
+                    chunkStr += tens[Math.floor(num / 10)] + ' ';
+                    num %= 10;
+                }
+                if (num > 0) {
+                    chunkStr += units[num] + ' ';
+                }
+                return chunkStr;
+            }
+
+            // Indian Numbering System
+            let parts = [];
+            parts.push(number % 1000); // hundreds
+            number = Math.floor(number / 1000);
+            while (number > 0) {
+                parts.push(number % 100); // thousands, lakhs, crores
+                number = Math.floor(number / 100);
+            }
+
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i] > 0) {
+                    let partWords = convertChunk(parts[i]);
+                    words = partWords + (scales[i] ? scales[i] + ' ' : '') + words;
+                }
+            }
+
+            return words.trim();
+        }
+
+        function printInvoice() {
+            window.print();
+        }
+
+        renderItems();
+        updatePreview();
+    </script>
+</body>
+
+</html>
