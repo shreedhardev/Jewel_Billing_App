@@ -79,9 +79,16 @@
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             line-height: 1.5;
-            padding: 2rem;
+            padding: 1rem;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
         }
 
         h1,
@@ -102,6 +109,7 @@
         @media (max-width: 1024px) {
             .container {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
         }
 
@@ -135,6 +143,16 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group[style*="grid-column: span 2"] {
+                grid-column: span 1 !important;
+            }
         }
 
         .form-group {
@@ -172,6 +190,16 @@
         .table-container {
             overflow-x: auto;
             margin-top: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+        }
+
+        @media (max-width: 600px) {
+            .table-container table {
+                min-width: 600px;
+            }
         }
 
         table {
@@ -287,6 +315,29 @@
             }
         }
 
+        @media (max-width: 768px) {
+            .invoice-preview {
+                transform: scale(0.4);
+                margin-top: -300px;
+                margin-bottom: -300px;
+            }
+
+            .preview-pane {
+                position: relative;
+                top: 0;
+                max-height: none;
+                margin-top: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .invoice-preview {
+                transform: scale(0.35);
+                margin-top: -350px;
+                margin-bottom: -350px;
+            }
+        }
+
         .preview-header {
             display: flex;
             justify-content: space-between;
@@ -317,6 +368,22 @@
             grid-template-columns: 1fr 1fr;
             margin-bottom: 30px;
             gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .preview-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .invoice-title {
+                text-align: center;
+            }
+
+            .bill-to-section {
+                grid-template-columns: 1fr;
+            }
         }
 
         .bill-to h3 {
@@ -421,6 +488,18 @@
                 height: 100%;
             }
         }
+
+        /* Modal Mobile Specifics */
+        @media (max-width: 600px) {
+            #historyModal .card {
+                width: 95%;
+                padding: 1rem;
+            }
+
+            #historyModal .btn-primary {
+                padding: 0.4rem 0.6rem;
+            }
+        }
     </style>
 </head>
 
@@ -433,11 +512,11 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Business Name</label>
-                        <input type="text" id="compName" value="Gold Star Wholesalers" oninput="updatePreview()">
+                        <input type="text" id="compName" value="SRI DEV JEWELLS MAKERS" oninput="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>GSTIN</label>
-                        <input type="text" id="compGst" value="33AAAAA0000A1Z5" oninput="updatePreview()">
+                        <input type="text" id="compGst" value="33HLRPD3242N1ZR" oninput="updatePreview()">
                     </div>
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Address</label>
@@ -446,7 +525,7 @@
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" id="compPhone" value="+91 98765 43210" oninput="updatePreview()">
+                        <input type="text" id="compPhone" value="+91 94439 31547" oninput="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Invoice Prefix</label>
