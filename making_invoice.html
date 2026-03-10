@@ -496,7 +496,8 @@
                             <tr>
                                 <th>Description</th>
                                 <th>HSN</th>
-                                <th>Quantity</th>
+                                <th>Gross Wt</th>
+                                <th>Stone Wt</th>
                                 <th>Rate</th>
                                 <th>Action</th>
                             </tr>
@@ -708,11 +709,11 @@
 
     <script>
         let items = [
-            { id: 1, name: 'Gold Ornaments Plain and Studded', hsn: '7113', qty: 688.450, rate: 9220.00 }
+            { id: 1, name: 'Gold Ornaments Plain and Studded', hsn: '7113', qty: 688.450, stoneWt: 9.170, rate: 9220.00 }
         ];
 
         function addItem() {
-            items.push({ id: Date.now(), name: '', hsn: '7113', qty: 0, rate: 0 });
+            items.push({ id: Date.now(), name: '', hsn: '7113', qty: 0, stoneWt: 0, rate: 0 });
             renderItems();
             updatePreview();
         }
@@ -738,6 +739,7 @@
                     <td><input type="text" class="item-input" value="${item.name}" placeholder="Description" oninput="updateItem(${item.id}, 'name', this.value)"></td>
                     <td><input type="text" class="item-input" value="${item.hsn}" oninput="updateItem(${item.id}, 'hsn', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.qty}" step="0.001" oninput="updateItem(${item.id}, 'qty', this.value)"></td>
+                    <td><input type="number" class="item-input" value="${item.stoneWt || 0}" step="0.001" oninput="updateItem(${item.id}, 'stoneWt', this.value)"></td>
                     <td><input type="number" class="item-input" value="${item.rate}" step="0.01" oninput="updateItem(${item.id}, 'rate', this.value)"></td>
                     <td><button class="btn btn-danger" onclick="removeItem(${item.id})">×</button></td>
                 `;
@@ -781,12 +783,13 @@
             let totalSgst = 0;
 
             items.forEach((item, idx) => {
-                const baseAmount = item.qty * item.rate;
+                const netWt = item.qty - (item.stoneWt || 0);
+                const baseAmount = netWt * item.rate;
                 const taxableAmount = baseAmount * 0.03; // 3% Tax
                 const cgst = taxableAmount / 2;
                 const sgst = taxableAmount / 2;
 
-                totalQty += item.qty;
+                totalQty += netWt;
                 totalBase += baseAmount;
                 totalTaxable += taxableAmount;
                 totalCgst += cgst;
@@ -799,12 +802,12 @@
                         <div class="font-bold">${item.name || 'Gold Ornament'}</div>
                         <div style="font-size: 8pt; margin-top: 5px;">
                             Gross wt : ${item.qty.toFixed(3)}Gms<br>
-                            Less stone Wt :0.000 Gms<br>
-                            Nett Wt :${item.qty.toFixed(3)}
+                            Less stone Wt :${(item.stoneWt || 0).toFixed(3)} Gms<br>
+                            Nett Wt :${netWt.toFixed(3)}
                         </div>
                     </td>
                     <td class="text-center">${item.hsn}</td>
-                    <td class="text-center">${item.qty.toFixed(3)}</td>
+                    <td class="text-center">${netWt.toFixed(3)}</td>
                     <td class="text-right">${item.rate.toFixed(2)}</td>
                     <td class="text-right">${Math.round(baseAmount).toLocaleString('en-IN')}</td>
                     <td class="text-right">${Math.round(taxableAmount).toLocaleString('en-IN')}</td>
